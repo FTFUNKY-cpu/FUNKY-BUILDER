@@ -9,10 +9,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout project
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Java 25
+      - name: Install Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -23,25 +23,27 @@ jobs:
         with:
           gradle-version: '9.6.0'
 
-      - name: Find and build project
+      - name: Extract source ZIP
+        run: |
+          mkdir -p extracted
+          unzip -o FUNKY_BUILDER_source.zip -d extracted
+
+      - name: Find and build
         shell: bash
         run: |
-          PROJECT_FILE=$(find . -name settings.gradle -not -path '*/.gradle/*' -print -quit)
-
-          if [ -z "$PROJECT_FILE" ]; then
-            echo "ERROR: settings.gradle not found."
-            find . -maxdepth 4 -type f
+          FILE=$(find extracted -type f \( -name settings.gradle -o -name settings.gradle.kts \) | head -n 1)
+          if [ -z "$FILE" ]; then
+            echo "Gradle settings file not found"
+            find extracted -maxdepth 4 -type f
             exit 1
           fi
-
-          PROJECT_DIR=$(dirname "$PROJECT_FILE")
-          echo "Building project in: $PROJECT_DIR"
-          gradle -p "$PROJECT_DIR" build
+          DIR=$(dirname "$FILE")
+          gradle -p "$DIR" build
 
       - name: Upload JAR
         uses: actions/upload-artifact@v4
         with:
           name: FUNKY-BUILDER-JAR
-          path: '**/build/libs/*.jar'
+          path: extracted/**/build/libs/*.jar
           if-no-files-found: error
           
