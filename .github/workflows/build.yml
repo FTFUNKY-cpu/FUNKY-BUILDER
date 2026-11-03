@@ -23,13 +23,25 @@ jobs:
         with:
           gradle-version: '9.6.0'
 
-      - name: Build FUNKY BUILDER
-        run: gradle build
+      - name: Find and build project
+        shell: bash
+        run: |
+          PROJECT_FILE=$(find . -name settings.gradle -not -path '*/.gradle/*' -print -quit)
 
-      - name: Upload JAR file
+          if [ -z "$PROJECT_FILE" ]; then
+            echo "ERROR: settings.gradle not found."
+            find . -maxdepth 4 -type f
+            exit 1
+          fi
+
+          PROJECT_DIR=$(dirname "$PROJECT_FILE")
+          echo "Building project in: $PROJECT_DIR"
+          gradle -p "$PROJECT_DIR" build
+
+      - name: Upload JAR
         uses: actions/upload-artifact@v4
         with:
           name: FUNKY-BUILDER-JAR
-          path: build/libs/*.jar
+          path: '**/build/libs/*.jar'
           if-no-files-found: error
           
