@@ -27,6 +27,9 @@ jobs:
         run: |
           mkdir -p extracted
           unzip -o FUNKY_BUILDER_source.zip -d extracted
+            - name: Fix Gradle repository settings
+        run: |
+          sed -i 's/RepositoriesMode.FAIL_ON_PROJECT_REPOS/RepositoriesMode.PREFER_PROJECT/' extracted/FUNKY_BUILDER/settings.gradle
 
       - name: Find and build
         shell: bash
